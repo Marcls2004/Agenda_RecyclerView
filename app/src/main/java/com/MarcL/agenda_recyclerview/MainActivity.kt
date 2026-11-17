@@ -13,13 +13,12 @@ class MainActivity : AppCompatActivity(), ItemClickListener {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ContactAdapter
+    val contactList = ArrayList<Contact>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // data to populate the RecyclerView with
-        val contactList = ArrayList<Contact>()
         val nombres = arrayOf("Juan", "María", "Carlos", "Ana", "Luis", "Laura", "Pedro", "Sofía", "David", "Elena")
         val apellidos = arrayOf("Pérez", "López", "Gómez", "Rodríguez", "Martínez", "García", "Sánchez", "Fernández", "Díaz", "Ruiz")
         for (i in 1..40){
@@ -39,6 +38,11 @@ class MainActivity : AppCompatActivity(), ItemClickListener {
 
         adapter.setClickListener(this)
         recyclerView.adapter = adapter
+
+        val fabAdd = findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.fabAddContact)
+        fabAdd.setOnClickListener {
+            mostrarDialogoNuevoContacto()
+        }
     }
 
     public override fun onItemClick(view: View?, position: Int) {
@@ -50,4 +54,44 @@ class MainActivity : AppCompatActivity(), ItemClickListener {
             Toast.LENGTH_SHORT
         ).show()
     }
+
+    private fun mostrarDialogoNuevoContacto() {
+        val layout = android.widget.LinearLayout(this).apply {
+            orientation = android.widget.LinearLayout.VERTICAL
+            setPadding(50, 40, 50, 10)
+        }
+
+        val inputNombre = android.widget.EditText(this).apply {
+            hint = "Nombre y apellidos"
+            inputType = android.text.InputType.TYPE_CLASS_TEXT or android.text.InputType.TYPE_TEXT_FLAG_CAP_WORDS
+        }
+
+        val inputTelefono = android.widget.EditText(this).apply {
+            hint = "Teléfono"
+            inputType = android.text.InputType.TYPE_CLASS_PHONE
+        }
+
+        layout.addView(inputNombre)
+        layout.addView(inputTelefono)
+
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Nuevo contacto")
+            .setView(layout)
+            .setPositiveButton("Guardar") { _, _ ->
+                val nombre = inputNombre.text.toString().trim()
+                val telefono = inputTelefono.text.toString().trim()
+
+                if (nombre.isNotEmpty() && telefono.isNotEmpty()) {
+                    contactList.add(Contact(nombre, telefono))
+                    val nuevaPosicion = contactList.size - 1
+                    adapter.notifyItemInserted(nuevaPosicion)
+                    recyclerView.scrollToPosition(nuevaPosicion)
+                } else {
+                    Toast.makeText(this, "Rellena ambos campos", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .setNegativeButton("Cancelar", null)
+            .show()
+    }
+
 }
